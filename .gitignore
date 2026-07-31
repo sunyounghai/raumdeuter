@@ -1,0 +1,13 @@
+data/raw_video/
+data/clips/
+data/frames_all/
+data/frames_selected/
+*.mp4
+*.jpg
+*.jpeg
+*.png
+.venv/
+__pycache__/
+*.pt
+*.onnx
+.DS_Store
