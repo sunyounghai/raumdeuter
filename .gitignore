@@ -1,8 +1,9 @@
 data/raw_video/
-data/clips/
-data/frames_all/
-data/frames_selected/
+data/frames_final/
+data/frames_pilot_*/
+data/frames_final_artifacts/
 *.mp4
+*.mkv
 *.jpg
 *.jpeg
 *.png
