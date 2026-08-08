@@ -4,6 +4,8 @@ data/frames_final/
 data/frames_pilot_*/
 data/frames_final_artifacts/
 data/yolo_dataset/images/
+weights/
+runs/
 
 # 모델 가중치 및 학습 산출물
 *.pt
