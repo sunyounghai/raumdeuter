@@ -11,10 +11,11 @@ COCO / Roboflow / H250 세 모델의 baseline, finetuned 평가를 하나로 통
 import argparse
 from pathlib import Path
 
-from config import EvalConfig
-from model_registry import MODELS, get_model_config, finetuned_weights_path
-from eval_common import compute_map, compute_fixed_threshold_metrics, write_metrics_file
-from paths import VAL_IMAGES, VAL_LABELS, RESULTS_DIR
+from src.detection.config import EvalConfig
+from src.detection.model_registry import MODELS, get_model_config, finetuned_weights_path
+from src.detection.eval_common import compute_map, compute_fixed_threshold_metrics, write_metrics_file
+from src.detection.paths import VAL_IMAGES, VAL_LABELS
+from src.common.paths import RESULTS_DIR
 
 def evaluate_one(model_name: str, stage: str, cfg: EvalConfig) -> dict:
     model_cfg = get_model_config(model_name)

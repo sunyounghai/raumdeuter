@@ -8,7 +8,7 @@
 
 from pathlib import Path
 
-from paths import WEIGHTS_DIR, RUNS_DIR
+from src.common.paths import WEIGHTS_DIR, RUNS_DIR
 
 MODELS = {
     "coco": {

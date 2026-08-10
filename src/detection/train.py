@@ -12,10 +12,11 @@ import argparse
 
 from ultralytics import YOLO
 
-from config import TrainConfig
-from model_registry import get_model_config, finetuned_weights_path
+from src.detection.config import TrainConfig
+from src.detection.model_registry import get_model_config, finetuned_weights_path
 
-from paths import DATASET_YAML, RUNS_DIR
+from src.detection.paths import DATASET_YAML
+from src.common.paths import RUNS_DIR
 
 def main():
     cfg = TrainConfig()
