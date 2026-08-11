@@ -21,3 +21,8 @@ Vision AI(객체 검출, 트래킹, 호모그래피)를 활용해 일반 방송 
 - 카메라 보정: OpenCV, Keypoint Detection 기반 호모그래피 자동화
 - 공간 분석: SciPy(Voronoi), Pitch Control, NumPy/Pandas
 - 시각화: mplsoccer, Matplotlib
+
+## 라이선스
+
+이 프로젝트는 [PnLCalib](https://github.com/mguti97/PnLCalib)(GPLv2)을 기반으로 하며,
+GNU General Public License v2.0에 따라 배포됩니다. 자세한 내용은 [LICENSE](./LICENSE)를 참고하세요.
