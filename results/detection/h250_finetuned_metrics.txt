@@ -1,0 +1,14 @@
+[h250 / finetuned]
+
+[주 지표: mAP, conf 전체 스윕]
+mAP50: 0.9880
+mAP50-95: 0.8122
+mAP75: 0.9361
+
+[보조 지표: conf=0.25, iou=0.5 고정]
+Precision: 0.9539
+Recall: 0.9904
+F1: 0.9718
+GT_count: 209
+Pred_count: 217
+TP: 207

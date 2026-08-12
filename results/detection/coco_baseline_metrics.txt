@@ -1,0 +1,14 @@
+[coco / baseline]
+
+[주 지표: mAP, conf 전체 스윕]
+mAP50: 0.8618
+mAP50-95: 0.5514
+mAP75: 0.5714
+
+[보조 지표: conf=0.25, iou=0.5 고정]
+Precision: 0.8125
+Recall: 0.8708
+F1: 0.8406
+GT_count: 209
+Pred_count: 224
+TP: 182

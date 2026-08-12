@@ -97,7 +97,7 @@ def main():
                 print(row)
 
             RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-            summary_path = RESULTS_DIR / "unified_comparision.txt"
+            summary_path = RESULTS_DIR / "unified_comparison.txt"
             with open(summary_path, "w") as f:
                 f.write(f"통합 비교표 (conf={cfg.conf_thres}, iou={cfg.iou_thres}), "
                         f"모든 모델 동일 기준)\n\n")
