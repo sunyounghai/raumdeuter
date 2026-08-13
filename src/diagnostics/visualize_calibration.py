@@ -56,8 +56,8 @@ def draw_pitch_overlay(frame_bgr: np.ndarray, H: np.ndarray) -> np.ndarray:
         cv2.line(overlay, pt1, pt2, (0, 0, 255), 3) # BGR
 
     # 2) 아크 3개 (왼쪽 페널티 아크, 오른쪽 페널티 아크, 센터서클)
-    # inference.py의 project() 함수 사용 - 반지름 9.15m 원 위의 점
-
+    # inference.py의 project() 함수 사용 - 반지름 9.15m 원 위의 점들을
+    # 촘촘히 샘플링해서 각각 이미지로 투영한 뒤 폴리라인으로 이어 그림
     r = 9.15
     arcs = [
         (11, 34, np.linspace(37, 143, 50)),     # 왼쪽 페널티 아크
