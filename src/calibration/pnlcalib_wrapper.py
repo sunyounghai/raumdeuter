@@ -153,6 +153,7 @@ def get_homography_matrix(
         pnl_refine: bool = True,
         iwidth: int = None,
         iheight: int = None,
+        diagnostics: dict | None = None,
 ) -> np.ndarray | None:
     """
     wrapper의 메인 진입점
@@ -163,6 +164,8 @@ def get_homography_matrix(
     line_threshold: line 검출 신뢰도 임계값 (PnLCalib 원본 기본값)
     pnl_refine: True면 검출된 line 정보로 카메라 파라미터를 한 번 더 최적화 (더 정확, 더 느림)
     iwidth, iheight: 원본 프레임 크기, None이면 frame_bgr.shape에서 자동으로 읽음
+    diagnostics: 비어있는 dict를 넘기면 n_keypoints, n_lines를 채워서 돌려줌
+                 (스팟체크 용도, 기본 사용에는 필요 없음)
     """
     h, w = frame_bgr.shape[:2]
     iwidth = iwidth or w
@@ -171,6 +174,11 @@ def get_homography_matrix(
     cam = FramebyFrameCalib(iwidth=iwidth, iheight=iheight, denormalize=True)
 
     kp_dict, lines_dict = _run_keypoint_inference(frame_bgr, models, kp_threshold, line_threshold)
+
+    if diagnostics is not None:
+        diagnostics["n_keypoints"] = len(kp_dict)
+        diagnostics["n_lines"] = len(lines_dict)
+
     cam.update(kp_dict, lines_dict)
     final_params_dict = cam.heuristic_voting(refine_lines=pnl_refine)
 
