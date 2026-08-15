@@ -164,7 +164,8 @@ def get_homography_matrix(
     line_threshold: line 검출 신뢰도 임계값 (PnLCalib 원본 기본값)
     pnl_refine: True면 검출된 line 정보로 카메라 파라미터를 한 번 더 최적화 (더 정확, 더 느림)
     iwidth, iheight: 원본 프레임 크기, None이면 frame_bgr.shape에서 자동으로 읽음
-    diagnostics: 비어있는 dict를 넘기면 n_keypoints, n_lines를 채워서 돌려줌
+    diagnostics: 비어있는 dict를 넘기면 n_keypoints, n_lines, kp_dict, lines_dict, 
+                 camera_position_m, rep_err를 채워서 돌려줌
                  (스팟체크 용도, 기본 사용에는 필요 없음)
     """
     h, w = frame_bgr.shape[:2]
@@ -178,12 +179,24 @@ def get_homography_matrix(
     if diagnostics is not None:
         diagnostics["n_keypoints"] = len(kp_dict)
         diagnostics["n_lines"] = len(lines_dict)
+        diagnostics["kp_dict"] = kp_dict
+        diagnostics["lines_dict"] = lines_dict
 
     cam.update(kp_dict, lines_dict)
     final_params_dict = cam.heuristic_voting(refine_lines=pnl_refine)
 
     if final_params_dict is None:
         return None
+
+    if diagnostics is not None:
+        # 카메라의 실제 3D 위치 (미터 단위) - H 산출에 성공했을 때만 채워짐
+        # 피치 중심원점(-52.5~52.5, -34~34) 기준으로 카메라가 어디에 있는지 확인할 때 사용
+        # (화면 방향과 피치 방향이 왜 다르게 보이는지 확인)
+        diagnostics["camera_position_m"] = final_params_dict["cam_params"]["position_meters"]
+
+        # heuristic_voting()이 18개 후보(3 mode x 6 RANSCA 설정) 중 최종 선택한 것의 내부 재투영 오차
+        # GT(외부 정답) 기반이 아니라 검출된 keypoint/line들 간의 내부 일관성으로 계산된 값
+        diagnostics["rep_err"] = final_params_dict["rep_err"]
 
     P = _projection_from_cam_params(final_params_dict)
     H = _projection_matrix_to_homography(P)
