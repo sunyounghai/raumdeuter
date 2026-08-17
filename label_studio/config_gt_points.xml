@@ -1,0 +1,13 @@
+<View>
+  <Header value="아래 피치 지점이 화면에 보이면 정확한 위치를 클릭하세요. 안 보이면 그냥 스킵하세요." />
+  <Image name="img" value="$image" zoom="true" zoomControl="true" />
+  <KeyPointLabels name="kp" toName="img">
+    <Label value="corner_00" background="#FF3333" />
+    <Label value="corner_105_0" background="#FF9933" />
+    <Label value="corner_0_68" background="#FFFF33" />
+    <Label value="corner_105_68" background="#33FF33" />
+    <Label value="center_circle" background="#33FFFF" />
+    <Label value="penalty_spot_left" background="#3333FF" />
+    <Label value="penalty_spot_right" background="#FF33FF" />
+  </KeyPointLabels>
+</View>
