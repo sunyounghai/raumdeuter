@@ -22,16 +22,24 @@ Ultralytics YOLO가 기대하는 구조로 재배치합니다.
 
 import random
 import shutil
-from pathlib import Path
+
+
+from src.detection.paths import (
+    DATASET_DIR,
+    DATASET_YAML,
+    TRAIN_IMAGES,
+    TRAIN_LABELS,
+    VAL_IMAGES,
+    VAL_LABELS,
+)
 
 # ── 설정 ──
 SEED = 42          # 재현성을 위해 고정 (항상 같은 분리 결과)
 VAL_RATIO = 0.2     # val 비율 20%
 
-BASE = Path(__file__).parent
-SRC_IMAGES = BASE / "images"
-SRC_LABELS = BASE / "labels"
-CLASSES_FILE = BASE / "classes.txt"
+SRC_IMAGES = DATASET_DIR / "images"
+SRC_LABELS = DATASET_DIR / "labels"
+CLASSES_FILE = DATASET_DIR / "classes.txt"
 
 
 def main():
@@ -59,9 +67,12 @@ def main():
 
     print(f"전체: {len(paired)}장 -> train: {len(train_set)}장, val: {len(val_set)}장")
 
-    for split_name, split_data in [("train", train_set), ("val", val_set)]:
-        img_dir = BASE / split_name / "images"
-        lbl_dir = BASE / split_name / "labels"
+    split_targets = [
+        (train_set, TRAIN_IMAGES, TRAIN_LABELS),
+        (val_set, VAL_IMAGES, VAL_LABELS),
+    ]
+    
+    for split_data, img_dir, lbl_dir in split_targets:
         img_dir.mkdir(parents=True, exist_ok=True)
         lbl_dir.mkdir(parents=True, exist_ok=True)
 
@@ -74,17 +85,17 @@ def main():
     names_block = "\n".join(f"  {i}: {name}" for i, name in enumerate(classes))
 
     yaml_content = f"""# 자동 생성됨 (split_dataset.py)
-path: {BASE.resolve()}
+path: {DATASET_DIR.resolve()}
 train: train/images
 val: val/images
 
 names:
 {names_block}
 """
-    (BASE / "dataset.yaml").write_text(yaml_content)
+    DATASET_YAML.write_text(yaml_content)
 
     print("dataset.yaml 생성 완료")
-    print(f"경로: {BASE / 'dataset.yaml'}")
+    print(f"경로: {DATASET_YAML}")
 
 
 if __name__ == "__main__":
