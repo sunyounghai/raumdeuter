@@ -1,0 +1,26 @@
+# ── 객체 검출 ──────────────────────────────────────────────
+torch
+torchvision
+ultralytics          # YOLOv8 / YOLOv11
+
+# ── 트래킹 ─────────────────────────────────────────────────
+boxmot                # ByteTrack, BoT-SORT(OSNet ReID + ECC 기반 CMC) 등
+
+# ── 트래킹 평가 ────────────────────────────────────────────
+git+https://github.com/SoccerNet/sn-trackeval.git   # HOTA/IDF1/AssA/DetA
+
+# ── 데이터 ─────────────────────────────────────────────────
+SoccerNet              # SoccerNet.Downloader (tracking-2023 등 다운로드)
+
+# ── 카메라 보정 ────────────────────────────────────────────
+opencv-python
+# PnLCalib는 pip 패키지가 아니라 external/PnLCalib에 git submodule로 포함됨
+
+# ── 공간 분석 ──────────────────────────────────────────────
+numpy
+pandas
+scipy                  # Voronoi 등 Pitch Control 구현에 사용
+
+# ── 시각화 ─────────────────────────────────────────────────
+matplotlib
+mplsoccer

@@ -6,22 +6,27 @@ Vision AI(객체 검출, 트래킹, 호모그래피)를 활용해 일반 방송 
 - [x] 프로젝트 설계
 - [x] 데이터 구축 (1차 파일럿: train 104장 / val 26장)
 - [x] 검출 모델 파인튜닝 (coco/roboflow/h250 3개 모델 baseline/finetuned 평가 완료 → [결과](./docs/detection/experiment_results.md))
-- [ ] 트래킹
+- [ ] 트래킹 (ByteTrack vs BoT-SORT ablation 설계 및 실행 중)
 - [x] 호모그래피 (PnLCalib 기반 wrapper 구현, 391프레임 정량 검증 완료 → [결과](./docs/calibration/spotcheck_results.md))
 - [ ] 지표 계산
 
-## 현재 작업: GT 기준 calibration 정량 검증
-391프레임 스팟체크(h_success 79.5%, keypoint 임계값 분석)를 완료했고, 그 결과를 GT(화면에서 직접 위치를 확인해 라벨링한 기준점)로 검증하는 단계입니다. n_keypoints 구간별 층화 샘플링(20장)과 Label Studio 라벨링까지 완료했고, 다음으로 재투영 오차(미터 단위) 계산 및 ByteTrack 연동을 진행합니다.
+## 현재 작업: 트래킹 ablation 설계 및 실행
+ID 쪼개짐 원인을 A(밀집/교차)·B(컷 전환)·C(프레임 이탈·재진입)·D(카메라 흔들림) 네 유형으로 분해하고, 유형별로 필요한 대응(외형 매칭 vs 카메라 모션 보정)을 구분했습니다. 자체 데이터 라벨링 전에 SoccerNet tracking-2023 공개 데이터셋으로 먼저 검증하는 단계이며, `boxmot` 기반으로 ByteTrack(baseline)과 BoT-SORT(OSNet ReID + ECC 기반 CMC)를 같은 코드 경로에서 비교하는 ablation을 진행 중입니다. 평가는 `sn-trackeval`(HOTA/IDF1/AssA/DetA)로 정량화하며, 이후 GTA-Link / AFLink+GSI 등 후처리(트랙 스티칭) 단계 추가 여부를 결정할 예정입니다.
+
 
 ## 한계
 - 검출 모델은 단일 경기 영상으로 학습됨. 다른 방송사/경기장/카메라 셋업에 대한 일반화 성능은 검증되지 않음 (향후 과제).
 - calibration(호모그래피) 정확도는 현재 정성적 확인(라인 오버레이, 선수 좌표 스팟체크)까지만 완료. GT 기준 정량 오차(reprojection error)는 아직 측정되지 않음.
 
 ## 기술 스택
-- 객체 검출/트래킹: YOLOv8/v11, ByteTrack, PyTorch
+- 객체 검출: YOLOv8/v11, PyTorch
+- 트래킹: [boxmot](https://github.com/mikel-brostrom/boxmot) (ByteTrack, BoT-SORT+OSNet), [sn-trackeval](https://github.com/SoccerNet/sn-trackeval) (HOTA/IDF1/AssA/DetA 평가)
+- 후처리(검토 중): [GTA-Link](https://github.com/sjc042/gta-link), StrongSORT의 AFLink/GSI
 - 카메라 보정: [PnLCalib](https://github.com/mguti97/PnLCalib) (Points-and-Lines Calibration), OpenCV
 - 공간 분석: SciPy(Voronoi), Pitch Control, NumPy/Pandas
 - 시각화: mplsoccer, Matplotlib
+- 검증 데이터: 자체 라벨링 데이터 + [SoccerNet](https://www.soccer-net.org/) tracking-2023 (도메인 일반화 검증용 공개 데이터셋)
+
 
 ## 프로젝트 구조
 ```
@@ -58,6 +63,7 @@ raumdeuter/
 ├── .gitmodules
 ├── COPYING                              # GPLv2 원문
 ├── LICENSE                              # 저작권 고지
+├── requirements.txt                     # pip 의존성
 └── README.md
 ```
 
