@@ -33,6 +33,14 @@ def parse_args():
     parser.add_argument("--frames_dir", type=Path, required=True, help="프레임 이미지 폴더 (img1/)")
     parser.add_argument("--conf", type=float, default=0.25, help="검출 신뢰도 임계값")
     parser.add_argument(
+        "--classes",
+        type=int,
+        nargs="+",
+        default=None,
+        help="검출할 클래스 ID (예: COCO 모델의 person=0)"
+                "지정 안 하면 모델의 전체 클래스를 다 검출함 — ",
+    )
+    parser.add_argument(
         "--frame_name_fmt",
         default="{:06d}.jpg",
         help="프레임 파일명 형식 (SoccerNet 기본: 000001.jpg)"
@@ -54,7 +62,9 @@ def main():
         # 파일명(예: 000123.jpg)에서 프레임 번호 추출
         frame_id = int(frame_path.stem)
 
-        results = model.predict(str(frame_path), conf=args.conf, verbose=False)
+        results = model.predict(
+            str(frame_path), conf=args.conf, classes=args.classes, verbose=False
+        )
         r = results[0]
 
         for (x1, y1, x2, y2), c in zip(r.boxes.xyxy.tolist(), r.boxes.conf.tolist()):
