@@ -40,11 +40,21 @@ def parse_args():
         help="평가할 클립 이름 (TrackEval GT/seqmaps에 이미 등록돼 있어야 함)",
     )
     parser.add_argument(
+        "--benchmark",
+        default="SoccerNet",
+        help="TrackEval GT 폴더의 벤치마크 이름, 최종 폴더명은 <benchmark>-<split> "
+             "예: 기본 GT는 'SoccerNet' (-> SoccerNet-test), "
+             "player+goalkeeper만 필터링한 GT는 'SoccerNet-players' (-> SoccerNet-players-test)",
+    )
+    parser.add_argument(
         "--out_name",
         default="unified_comparison.txt",
-        help="results/tracking/ 밑에 저장할 파일명",
+        help="results/tracking/ 밑에 저장할 파일명 (기본: unified_comparison_<클립>.txt — 클립마다 자동 분리)",
     )
-    return parser.parse_args()
+    args = parser.parse_args()
+    if args.out_name is None:
+        args.out_name = f"unified_comparison_{args.seq}.txt"
+    return args
 
 
 def main():
@@ -55,7 +65,7 @@ def main():
     dataset_config = trackeval.datasets.MotChallenge2DBox.get_default_dataset_config()
     dataset_config["GT_FOLDER"] = str(TRACKEVAL_DATA / "gt" / "mot_challenge") + "/"
     dataset_config["TRACKERS_FOLDER"] = str(TRACKEVAL_DATA / "trackers" / "mot_challenge") + "/"
-    dataset_config["BENCHMARK"] = "SoccerNet"
+    dataset_config["BENCHMARK"] = args.benchmark
     dataset_config["SPLIT_TO_EVAL"] = "test"
     dataset_config["TRACKERS_TO_EVAL"] = args.conditions
 
@@ -79,15 +89,53 @@ def main():
     return results
 
 
+def _load_existing_rows(seq_name: str, out_name: str) -> dict:
+    """
+    기존 unified_comparison.txt가 있으면 파싱해서 {condition: row_dict} 형태로 반환,
+    없으면 빈 딕셔너리 반환, 다른 클립(seq_name)의 파일이면 무시(새로 시작)함.
+    """
+    out_path = RESULTS_DIR / "tracking" / out_name
+    if not out_path.exists():
+        return {}
+
+    lines = out_path.read_text().splitlines()
+    if not lines or not lines[0].startswith(seq_name):
+        return {}
+
+    rows = {}
+    data_lines = [l for l in lines[3:] if l.strip()] # 제목/빈줄/헤더 3줄 건너뜀
+    for line in data_lines:
+        parts = line.split()
+        if len(parts) != 9: # condition + HOTA/DetA/AssA/IDF1/Dets/GT_Dets/IDs/GT_IDs = 9개
+            continue
+        cond, hota, deta, assa, idf1, dets, gt_dets, ids, gt_ids = parts
+        rows[cond] = {
+            "condition": cond,
+            "HOTA": float(hota),
+            "DetA": float(deta),
+            "AssA": float(assa),
+            "IDF1": float(idf1),
+            "Dets": int(dets),
+            "GT_Dets": int(gt_dets),
+            "IDs": int(ids),
+            "GT_IDs": int(gt_ids),
+        }
+    return rows
+
+
 def save_unified_comparison(results: dict, conditions: list[str], seq_name: str, out_name: str) -> None:
     """
     지정한 조건들의 HOTA/DetA/AssA/IDF1/트랙수를 표로 정리
+
+    기존 파일이 있으면 덮어쓰지 않고 조건 이름 기준으로 병합함
+    이번 실행에 없는 이전 조건들의 행은 그대로 유지되고, 겹치는 조건은 이번 결과로 갱신
     """
-    rows = []
+    rows_by_condition = _load_existing_rows(seq_name, out_name)
+
     for cond in conditions:
         d = results["MotChallenge2DBox"][cond][seq_name][CLASS_NAME]
         hota_arr = d["HOTA"]
-        row = {
+        rows_by_condition[cond] = {
             "condition": cond,
             "HOTA": np.mean(hota_arr["HOTA"]) * 100,
             "DetA": np.mean(hota_arr["DetA"]) * 100,
@@ -98,15 +146,15 @@ def save_unified_comparison(results: dict, conditions: list[str], seq_name: str,
             "IDs": d["Count"]["IDs"],
             "GT_IDs": d["Count"]["GT_IDs"],
         }
-        rows.append(row)
 
     out_dir = RESULTS_DIR / "tracking"
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / out_name
 
     header = f"{'condition':<14}{'HOTA':>8}{'DetA':>8}{'AssA':>8}{'IDF1':>8}{'Dets':>8}{'GT_Dets':>9}{'IDs':>6}{'GT_IDs':>8}"
-    lines = [f"{seq_name} 기준 조건 비교 (sn-trackeval)", "", header]
-    for r in rows:
+    lines = [f"{seq_name} 기준 조건 비교 (sn-trackeval, 누적)", "", header]
+    for cond in sorted(rows_by_condition.keys()):
+        r = rows_by_condition[cond]
         lines.append(
             f"{r['condition']:<14}{r['HOTA']:>8.3f}{r['DetA']:>8.3f}{r['AssA']:>8.3f}"
             f"{r['IDF1']:>8.3f}{r['Dets']:>8d}{r['GT_Dets']:>9d}{r['IDs']:>6d}{r['GT_IDs']:>8d}"

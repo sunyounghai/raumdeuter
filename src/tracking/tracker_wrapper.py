@@ -32,6 +32,8 @@ import numpy as np
 
 from boxmot.trackers.bbox.botsort import BotSort
 from boxmot.trackers.bbox.bytetrack import ByteTrack
+from boxmot.trackers.bbox.strongsort import StrongSort
+
 
 def load_mot_detections(csv_path: Path) -> dict[int, np.ndarray]:
     """
@@ -80,7 +82,18 @@ def build_tracker(tracker_type: str, reid_weights: Path | None, device: str):
             reid_model=reid.model,
             with_reid=True,
         )
-    
+
+    if tracker_type == "strongsort":
+        if reid_weights is None:
+            raise ValueError(
+                "StrongSORT는 ReID 가중치가 필요합니다. "
+                "--reid_weights weights/osnet_x0_25_msmt17.pt 형태로 지정하세요."
+            )
+        from boxmot.reid.core import ReID
+
+        reid = ReID(weights=reid_weights, device=device, half=False)
+        return StrongSort(reid_model=reid.model)
+        
     raise ValueError(f"알 수 없는 tracker_type: {tracker_type}")
 
 
@@ -133,7 +146,7 @@ def main() -> None:
     )
     parser.add_argument("--detections", type=Path, required=True, help="입력 검출값 csv (MOT 포맷)")
     parser.add_argument("--frames_dir", type=Path, required=True, help="프레임 이미지 폴더")
-    parser.add_argument("--tracker", choices=["bytetrack", "botsort"], default="bytetrack")
+    parser.add_argument("--tracker", choices=["bytetrack", "botsort", "strongsort"], default="bytetrack")
     parser.add_argument(
         "--reid_weights",
         type=Path,
