@@ -1,0 +1,9 @@
+SNMOT-116 기준 조건 비교 (sn-trackeval, 누적)
+
+condition               HOTA    DetA    AssA    IDF1    Dets  GT_Dets   IDs  GT_IDs
+botsort_det           75.381  93.906  60.555  72.550   11236    11460    76      27
+botsort_finetuned     42.834  56.434  32.786  51.681    8919    11460    73      27
+botsort_gt            75.381  93.906  60.555  72.550   11236    11460    76      27
+bytetrack_det         71.983  84.961  61.084  75.824   11182    11460   130      27
+bytetrack_finetuned   39.722  54.092  29.467  46.939    8813    11460   102      27
+bytetrack_gt          71.983  84.961  61.084  75.824   11182    11460   130      27

@@ -1,0 +1,15 @@
+SNMOT-116 기준 조건 비교 (sn-trackeval, 누적)
+
+condition                        HOTA    DetA    AssA    IDF1    Dets  GT_Dets   IDs  GT_IDs
+botsort_coco_baseline          37.220  45.442  30.828  46.627    6895    10151    63      24
+botsort_finetuned              43.463  57.711  33.027  53.078    8919    10151    73      24
+botsort_gt                     74.230  86.167  63.964  72.483   11236    10151    76      24
+botsort_h250_baseline          44.108  60.363  32.544  53.535    9369    10151    57      24
+botsort_roboflow_baseline      37.328  44.061  31.993  44.403    7510    10151   157      24
+bytetrack_coco_baseline        34.303  46.359  25.848  42.159    7098    10151    97      24
+bytetrack_finetuned            40.336  55.521  29.619  48.028    8813    10151   102      24
+bytetrack_gt                   71.161  77.237  65.618  76.295   11182    10151   130      24
+bytetrack_h250_baseline        44.088  59.068  33.219  52.526    9268    10151    77      24
+bytetrack_roboflow_baseline    31.749  42.700  24.021  37.670    7396    10151   203      24
+strongsort_gt                  82.958  88.585  77.689  80.399   11078    10151    72      24
+strongsort_h250_baseline       44.943  61.796  33.039  51.144    9871    10151    91      24

@@ -151,12 +151,15 @@ def save_unified_comparison(results: dict, conditions: list[str], seq_name: str,
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / out_name
 
-    header = f"{'condition':<14}{'HOTA':>8}{'DetA':>8}{'AssA':>8}{'IDF1':>8}{'Dets':>8}{'GT_Dets':>9}{'IDs':>6}{'GT_IDs':>8}"
+    # 가장 긴 조건 이름에 맞춰 첫 칸 너비를 동적으로 정함 (정렬 깨짐 방지)
+    name_width = max(len(c) for c in rows_by_condition.keys()) + 2
+
+    header = f"{'condition':<{name_width}}{'HOTA':>8}{'DetA':>8}{'AssA':>8}{'IDF1':>8}{'Dets':>8}{'GT_Dets':>9}{'IDs':>6}{'GT_IDs':>8}"
     lines = [f"{seq_name} 기준 조건 비교 (sn-trackeval, 누적)", "", header]
     for cond in sorted(rows_by_condition.keys()):
         r = rows_by_condition[cond]
         lines.append(
-            f"{r['condition']:<14}{r['HOTA']:>8.3f}{r['DetA']:>8.3f}{r['AssA']:>8.3f}"
+            f"{r['condition']:<{name_width}}{r['HOTA']:>8.3f}{r['DetA']:>8.3f}{r['AssA']:>8.3f}"
             f"{r['IDF1']:>8.3f}{r['Dets']:>8d}{r['GT_Dets']:>9d}{r['IDs']:>6d}{r['GT_IDs']:>8d}"
         )
 
