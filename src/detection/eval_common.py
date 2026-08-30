@@ -40,7 +40,7 @@ def iou(box1: list[float], box2: list[float]) -> float:
     return inter / union if union > 0 else 0.0
 
 
-def _collect_predictions(model: YOLO, img_path: Path, conf: float,
+def collect_predictions(model: YOLO, img_path: Path, conf: float,
                          class_map: dict[int, int] | None):
     """예측 박스를 뽑고, class_map이 주어지면 클래스를 GT 인덱스로 리매핑
     class_map이 None이면 파인튜닝 후 모델(이미 단일 클래스)로 간주해 필터링 없이 사용"""
@@ -73,7 +73,7 @@ def compute_map(model_path: Path, val_images: Path, val_labels: Path,
     metric = MeanAveragePrecision(iou_type="bbox")
 
     for img_path in sorted(Path(val_images).glob("*.jpg")):
-        boxes, scores, labels, img_w, img_h = _collect_predictions(
+        boxes, scores, labels, img_w, img_h = collect_predictions(
             model, img_path, map_conf_floor, class_map
         )
         gt_boxes = load_gt_boxes(Path(val_labels) / f"{img_path.stem}.txt", img_w, img_h)
@@ -110,7 +110,7 @@ def compute_fixed_threshold_metrics(model_path: Path, val_images: Path, val_labe
     total_gt = total_pred = total_tp = 0
 
     for img_path in sorted(Path(val_images).glob("*.jpg")):
-        boxes, scores, labels, img_w, img_h = _collect_predictions(
+        boxes, scores, labels, img_w, img_h = collect_predictions(
             model, img_path, conf_thres, class_map
         )
         gt_boxes = load_gt_boxes(Path(val_labels) / f"{img_path.stem}.txt", img_w, img_h)
