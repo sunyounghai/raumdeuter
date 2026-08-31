@@ -201,3 +201,31 @@ def get_homography_matrix(
     P = _projection_from_cam_params(final_params_dict)
     H = _projection_matrix_to_homography(P)
     return H
+
+
+def get_player_anchor_point_xyxy(bbox: tuple) -> np.ndarray:
+    """
+    bbox: (x1, y1, x2, y2), 픽셀 좌표
+    선수의 '발이 닿는 지점' = bbox 하단 중심(bottom-center)으로 근사
+    카메라 각도가 심하면(줌인/측면) 이 근사 자체가 깨질 수 있음
+    """
+    x1, y1, x2, y2 = bbox
+    return np.array([(x1 + x2) / 2, y2])
+
+def image_point_to_pitch(image_pt: np.ndarray, H: np.ndarray) -> np.ndarray:
+    """
+    이미지 픽셀 좌표 -> 피치 좌표(코너 원점, 0~105, 0~68)로 변환
+
+    get_homography_matrix()가 주는 H는 pitch(중심원점, -52.5~52.5) -> image 방향이므로 
+    역방향(image -> pitch)은 H의 역행렬을 씀, 그 결과도 중심원점 기준이라 코너원점으로 맞추려면 
+    PITCH_LENGTH/2, PITCH_WIDTH/2 만큼 다시 평행이동해야 함
+    """
+    H_inv = np.linalg.inv(H)
+    p = np.array([image_pt[0], image_pt[1], 1.0])
+    pitch_p = H_inv @ p
+    pitch_p /= pitch_p[2]
+
+    x_centered, y_centered = pitch_p[0], pitch_p[1]
+    x_corner = x_centered + PITCH_LENGTH / 2
+    y_corner = y_centered + PITCH_WIDTH / 2
+    return np.array([x_corner, y_corner])
