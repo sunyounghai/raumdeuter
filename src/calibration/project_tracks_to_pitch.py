@@ -35,6 +35,8 @@ def parse_args():
     parser.add_argument("--weights_kp", type=str, required=True, help="PnLCalib keypoint 가중치")
     parser.add_argument("--weights_line", type=str, required=True, help="PnLCalib line 가중치")
     parser.add_argument("--device", default="cpu")
+    parser.add_argument("--min_keypoints", type=int, default=5,help="이 개수 미만이면 H가 나와도 실패로 취급")
+    parser.add_argument("--max_interp_gap", type=int, default=3, help="같은 트랙에서 이 프레임 수 이하로 끊긴 구간만 선형보간으로 채움")
     parser.add_argument("--out", type=Path, required=True, help="결과 저장 경로")
     return parser.parse_args()
 
@@ -54,14 +56,40 @@ def load_tracks(path: Path) -> dict[int, list]:
 
 
 def bbox_to_foot_point(x: float, y: float, w: float, h: float) -> tuple[float, float]:
-    """bbox 하단 중심 = 발밑 좌표"""
-    return x + w / 2, y + h
+    x1, y1, x2, y2 = x, y, x + w, y + h
+    return get_player_anchor_point_xyxy((x1, y1, x2, y2))
 
 
 def pixel_to_pitch(px: float, py: float, H) -> tuple[float, float] | None:
     if H is None:
         return None
     return image_point_to_pitch(np.array([px, py]), H)
+
+
+def interpolate_short_gaps(rows: list, max_gap: int) -> list:
+    """
+    같은 트랙(track_id) 안에서 max_gap 프레임 이하로 끊긴 구간만 선형보간으로 채움
+    """
+    by_track = defaultdict(list)
+    for frame_id, track_id, x, y in rows:
+        by_track[track_id].append((frame_id, x, y))
+
+    filled_rows = list(rows)
+    for track_id, points in by_track.items():
+        points.sort(key=lambda p: p[0])
+        for i in range(len(points) - 1):
+            f1, x1, y1 = points[i]
+            f2, x2, y2 = points[i + 1]
+            gap = f2 - f1
+            if 1 < gap <= max_gap + 1: # 사이에 1~max_gap 프레임이 비어있는 경우
+                for step in range(1, gap):
+                    ratio = step / gap
+                    fx = f1 + step
+                    ix = x1 + (x2 - x1) * ratio
+                    iy = y1 + (y2 - y1) * ratio
+                    filled_rows.append([fx, track_id, ix, iy])
+
+    return filled_rows
 
 
 def main():
@@ -83,9 +111,10 @@ def main():
             continue
 
         frame_bgr = cv2.imread(str(img_path))
-        H = get_homography_matrix(frame_bgr, models)
+        diag = {}
+        H = get_homography_matrix(frame_bgr, models, diagnostics=diag)
 
-        if H is None:
+        if H is None or diag.get("n_keypoints", 0) < args.min_keypoints:
             failed_frames.append(frame_id)
             continue
 
@@ -101,14 +130,22 @@ def main():
             print(f"  frame {frame_id} 처리 중... (누적 {len(rows)}행, calibration 실패 {len(failed_frames)}건)")
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
+
+    filled_rows = interpolate_short_gaps(rows, args.max_interp_gap)
+    n_interpolated = len(filled_rows) - len(rows)
+
     with open(args.out, "w", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["frame_id", "track_id", "pitch_x_m", "pitch_y_m"])
-        writer.writerows(rows)
+        writer.writerow(["frame_id", "track_id", "pitch_x_m", "pitch_y_m", "interpolated"])
+        real_keys = {(r[0], r[1]) for r in rows}
+        for row in sorted(filled_rows, key=lambda r: (r[1], r[0])):
+            is_interp = (row[0], row[1]) not in real_keys
+            writer.writerow(row + [is_interp])
 
     print(f"\n완료 -> {args.out}")
-    print(f"총 {len(frame_ids)}프레임 중 calibration 실패 {len(failed_frames)}개 "
-          f"({len(failed_frames)/len(frame_ids)*100:.1f}%)")
+    print(f"실측 {len(rows)}행 + 선형보간 {n_interpolated}행 (max_interp_gap={args.max_interp_gap})")
+    print(f"총 {len(frame_ids)}프레임 중 calibration 실패(keypoint<{args.min_keypoints}포함) "
+          f"{len(failed_frames)}개 ({len(failed_frames)/len(frame_ids)*100:.1f}%)")
     if failed_frames:
         print(f"실패 프레임 예시(최대 10개): {failed_frames[:10]}")
 
