@@ -8,17 +8,22 @@ Vision AI(객체 검출, 트래킹, 호모그래피)를 활용해 일반 방송 
 - [x] 검출 모델 파인튜닝 (coco/roboflow/h250 3개 모델 baseline/finetuned 평가 완료 → [결과](./docs/detection/experiment_results.md))
 - [x] 트래킹 (검출기x트래커 12개 조합 비교 완료, h250_baseline + BoT-SORT 최종 채택 → [결과](./docs/tracking/experiment_results.md))
 - [x] 호모그래피 (PnLCalib 기반 wrapper 구현, 391프레임 정량 검증 완료 → [결과](./docs/calibration/spotcheck_results.md))
-- [ ] 지표 계산
+- [ ] 지표 계산 (진행 중 — 이동 속도 지표로 파이프라인 종합 검증 완료, 트랙 오매칭 문제 발견 → [결과](./docs/metrics/experiment_results.md))
 
 ## 현재 작업: 트래킹 파이프라인 확정, 다음 단계(지표 계산) 준비
-검출기(coco/roboflow/h250 baseline + h250_finetuned) x 트래커(ByteTrack/BoT-SORT/StrongSORT) 조합을 SoccerNet SNMOT-116 클립에서 비교한 결과, **h250_baseline(파인튜닝 없이) + BoT-SORT** 조합을 최종 채택했습니다. 검출기 선택이 트래커 선택보다 성능에 훨씬 큰 영향을 줬습니다. 자체 파인튜닝은 새로운 도메인에서 baseline 성능을 넘지 못해, 과적합 가능성을 실제로 확인했습니다. 상세 근거는 [트래킹 실험 결과](./docs/tracking/experiment_results.md) 참고.
+파이프라인(h250_baseline + BoT-SORT + calibration)을 이어붙여 첫 지표(이동 속도)를 계산한 결과, 
+매 프레임 간격으로 계산 시 calibration의 프레임별 계산 오차가 속도로 크게
+증폭되는 문제를 발견했습니다. GT(트래킹 정답) 데이터로 원인을 검증한 결과, 계산 간격을
+조정하는 것으로 문제의 83%가 해결됨을 확인했습니다(비현실적 속도 비율 25.0%→4.2%).
 
-다음 단계로는 확정된 트래킹 파이프라인을 calibration(호모그래피)과 연동해 실제 경기장 좌표계 위에서 선수 궤적을 그리는 지표 계산 단계로 넘어갈 예정입니다.
+다만 같은 방법을 자체 영상에 적용하면 개선 폭이 훨씬 작았습니다(82~90%→77~79%) — 이는
+calibration이 아니라 트래킹 단계의 오매칭이 주된 원인으로 보이며 다음 단계로 이 트랙 오매칭 문제를 진단하고 해결할 계획입니다. 
 
 ## 한계
 - 검출 모델은 단일 경기 영상으로 학습됨. 다른 방송사/경기장/카메라 셋업에 대한 일반화 성능은 검증되지 않음 (향후 과제).
 - calibration(호모그래피)은 GT 기준 재투영 오차 측정까지 완료함(20프레임, n_keypoints 구간별 평균 0.71~2.27m). 다만 표본이 작고(구간당 4~7개) 결과가 이상치 1건에 크게 좌우되어 결론을 확정하기엔 이름 — 표본 확대 필요. 상세는 [spotcheck_results.md](./docs/calibration/spotcheck_results.md) 참고.
 - 트래킹 결과는 단일 클립(SNMOT-116, 코너킥 상황) 기준. 다른 성격의 클립 검증 및 후처리(트랙 스티칭) 단계는 미완료 — 상세는 [트래킹 실험 결과의 한계 섹션](./docs/tracking/experiment_results.md#한계) 참고.
+- 자체 영상에서 트랙 오매칭 문제가 미해결 상태로 남아있음 — 상세는 [지표 계산 실험 결과의 한계 섹션](./docs/metrics/experiment_results.md#한계) 참고.
 
 ## 기술 스택
 - 객체 검출: YOLOv8/v11, PyTorch
@@ -41,6 +46,8 @@ raumdeuter/
 │   │   └── labeling_guideline.md
 │   ├── tracking/
 │   │   └── experiment_results.md      # 검출기x트래커 12개 조합 비교
+│   ├── metrics/
+│   │   └── experiment_results.md      # 이동 속도 지표
 │   └── data_extraction_log.md
 ├── external/
 │   └── PnLCalib/                       # git submodule (GPLv2)
@@ -64,6 +71,8 @@ raumdeuter/
 │   ├── common/                          # 공통 경로 설정
 │   ├── detection/                       # YOLO 검출 모델 학습/평가
 │   ├── calibration/                     # PnLCalib wrapper (호모그래피 산출)
+│   ├── tracking/                        # boxmot 트래킹 실행, sn-trackeval 채점
+│   ├── metrics/                         # 지표 계산 (이동 속도 등)
 │   └── diagnostics/                     # 정성적 검증 도구 (calibration/detection/tracking
 │                                         # 스팟체크, GT 재투영 오차 측정)
 ├── .gitignore
