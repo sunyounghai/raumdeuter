@@ -2,6 +2,17 @@
 
 Vision AI(객체 검출, 트래킹, 호모그래피)를 활용해 일반 방송 축구 영상만으로 선수의 오프더볼 공간 침투를 정량화하는 프로젝트입니다.
 
+
+## 포트폴리오 데모
+
+실측 결과(Detection/Tracking/Calibration)를 볼 수 있는 웹 페이지입니다.
+
+**🔗 [raumdeuter.streamlit.app](https://raumdeuter.streamlit.app/)**
+
+- 코드: [`demo/`](./demo)
+- 아직 진행 중인 항목(공 검출, 공간 침투 지수)은 Roadmap 페이지에 그대로 표시되어 있습니다.
+
+
 ## 진행 상태
 - [x] 프로젝트 설계
 - [x] 데이터 구축 (1차 파일럿: train 104장 / val 26장)
@@ -32,12 +43,18 @@ calibration이 아니라 트래킹 단계의 오매칭이 주된 원인으로 �
 - 카메라 보정: [PnLCalib](https://github.com/mguti97/PnLCalib) (Points-and-Lines Calibration), OpenCV
 - 공간 분석: SciPy(Voronoi), Pitch Control, NumPy/Pandas
 - 시각화: mplsoccer, Matplotlib
+- 포트폴리오 데모: Streamlit, Plotly ([`demo/`](./demo))
 - 검증 데이터: 자체 라벨링 데이터 + [SoccerNet](https://www.soccer-net.org/) tracking-2023 (도메인 일반화 검증용 공개 데이터셋)
 
 
 ## 프로젝트 구조
 ```
 raumdeuter/
+├── demo/
+│   ├── app.py                          # Streamlit 포트폴리오 데모 (Home)
+│   ├── data.py                         # 실측 데이터 단일 소스
+│   ├── utils.py                        # 테마/공통 UI 헬퍼
+│   ├── pages/                          # Detection/Tracking/Calibration/Roadmap
 ├── docs/
 │   ├── calibration/
 │   │   └── spotcheck_results.md       # 391프레임 calibration 정량 검증 결과
@@ -75,6 +92,8 @@ raumdeuter/
 │   ├── metrics/                         # 지표 계산 (이동 속도 등)
 │   └── diagnostics/                     # 정성적 검증 도구 (calibration/detection/tracking
 │                                         # 스팟체크, GT 재투영 오차 측정)
+├── .streamlit/
+│   └── config.toml                      # 포트폴리오 데모 테마 설정
 ├── .gitignore
 ├── .gitmodules
 ├── COPYING                              # GPLv2 원문
