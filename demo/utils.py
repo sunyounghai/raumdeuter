@@ -7,7 +7,10 @@
 """
 
 from pathlib import Path
+import base64
 import streamlit as st
+
+BASE_DIR = Path(__file__).resolve().parent
 
 # ── 브랜드 강조색 (테마와 무관하게 항상 같은 의미를 가지는 색) ──
 GREEN = "#00B37E"
@@ -102,15 +105,34 @@ def status_badge(status: str) -> str:
     return f'<span class="rd-badge" style="background-color:{color};">{label}</span>'
 
 
-def image_or_placeholder(path: str, caption: str, sub: str = "", kind: str = "IMAGE"):
+def image_or_placeholder(path: str, caption: str, sub: str = "", kind: str = "IMAGE", height: int = None):
     """
     path에 실제 이미지 파일이 있으면 그대로 보여주고,
     없으면 pptx 덱과 같은 스타일의 '자리 표시' 박스를 대신 보여준다.
     나중에 같은 경로에 이미지 파일만 넣으면 자동으로 실제 이미지로 바뀐다.
     """
-    p = Path(path)
+    p = BASE_DIR / path
     if p.exists():
-        st.image(str(p), caption=caption, use_container_width=True)
+        if height:                              # ← 여기부터 새로 추가된 부분
+            img_bytes = p.read_bytes()
+            b64 = base64.b64encode(img_bytes).decode()
+            ext = p.suffix.lstrip(".").lower()
+            mime = "jpeg" if ext in ("jpg", "jpeg") else ext
+            st.markdown(
+                f"""
+                <div style="height:{height}px; display:flex; align-items:center;
+                            justify-content:center; overflow:hidden; border-radius:8px;
+                            background-color: var(--secondary-background-color);">
+                    <img src="data:image/{mime};base64,{b64}"
+                         style="max-height:100%; max-width:100%; object-fit:contain;">
+                </div>
+                <div style="text-align:center; font-size:0.85rem; opacity:0.7; margin-top:6px;
+                            color: var(--text-color);">{caption}</div>
+                """,
+                unsafe_allow_html=True,
+            )
+        else:                                    # ← 여기까지가 새 부분
+            st.image(str(p), caption=caption, use_container_width=True)   # 기존 코드 그대로
     else:
         st.markdown(
             f"""

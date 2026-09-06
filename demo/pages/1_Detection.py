@@ -35,11 +35,11 @@ for m in DETECTION_MODELS:
 
 st.divider()
 
-st.subheader("오탐 · 미탐 분석")
-st.markdown(
-    f'<p class="rd-caption">mAP 수치 개선의 원인을 실제 검출 사례로 검증 — 베이스라인 vs 파인튜닝 비교</p>',
-    unsafe_allow_html=True,
-)
+# st.subheader("오탐 · 미탐 분석")
+# st.markdown(
+#     f'<p class="rd-caption">mAP 수치 개선의 원인을 실제 검출 사례로 검증 — 베이스라인 vs 파인튜닝 비교</p>',
+#     unsafe_allow_html=True,
+# )
 
 # t1, t2, t3 = st.columns(3)
 # with t1:
@@ -52,5 +52,13 @@ st.markdown(
 #     image_or_placeholder("assets/images/fp_finetuned.jpg", "파인튜닝 — 오탐 제거")
 # with t3:
 #     st.markdown("**박스 정밀도 개선**")
-#     image_or_placeholder("assets/images/precision_baseline.jpg", "베이스라인 — 느슨한 박스")
-#     image_or_placeholder("assets/images/precision_finetuned.jpg", "파인튜닝 — 정밀한 박스")
+#     p1, p2 = st.columns(2)
+#     with p1:
+#         image_or_placeholder("assets/images/precision_01_baseline.png", "베이스라인")
+#     with p2:
+#         image_or_placeholder("assets/images/precision_01_finetuned.png", "파인튜닝")
+#     p3, p4 = st.columns(2)
+#     with p3:
+#         image_or_placeholder("assets/images/precision_02_baseline.png", "베이스라인")
+#     with p4:
+#         image_or_placeholder("assets/images/precision_02_finetuned.png", "파인튜닝")
