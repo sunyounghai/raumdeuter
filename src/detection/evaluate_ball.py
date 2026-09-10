@@ -27,7 +27,7 @@ def evaluate_ball_baseline(model_name: str, cfg: EvalConfig) -> dict:
     ball_idx = BALL_SOURCE_CLASS[model_name]
     ball_class_map = {ball_idx: 0}
 
-    print(f"]{model_name} / baseline / ball 평가 중 "
+    print(f"{model_name} / baseline / ball 평가 중 "
           f"(weights={weights}, pred_class={ball_idx})")
 
     map_metrics = compute_map(
@@ -40,7 +40,7 @@ def evaluate_ball_baseline(model_name: str, cfg: EvalConfig) -> dict:
     )
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    result_path = RESULTS_DIR / f"{model_name}_baseline_ball_metrics.txt"
+    result_path = RESULTS_DIR / "detection" / f"{model_name}_baseline_ball_metrics.txt"
     write_metrics_file(
         result_path,
         header=f"[{model_name} / baseline / ball]",
