@@ -31,12 +31,14 @@ from ultralytics import YOLO
 
 from src.detection.config import EvalConfig
 from src.detection.model_registry import get_model_config, finetuned_weights_path
-from src.detection.paths import VAL_IMAGES, VAL_LABELS
+from src.detection.paths import VAL_IMAGES, VAL_LABELS, VAL_IMAGES_BALL, VAL_LABELS_BALL
 from src.detection.eval_common import load_gt_boxes, iou, collect_predictions
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Detection TP/FP/FN을 프레임에 오버레이해서 저장")
     parser.add_argument("--model", required=True, help="coco / roboflow / h250")
+    parser.add_argument("--target", default="player", choices=["player", "ball"],
+                    help="player(기본) 또는 ball")
     parser.add_argument("--stage", required=True, choices=["baseline", "finetuned"])
     default_cfg = EvalConfig()
     parser.add_argument("--conf", type=float, default=default_cfg.conf_thres)
@@ -123,24 +125,33 @@ def main():
     args = parse_args()
     model_cfg = get_model_config(args.model)
 
-    if args.stage == "baseline":
+    if args.target == "ball":
+        if args.stage == "finetuned":
+            raise ValueError("공 검출은 아직 파인튜닝 전입니다. --stage baseline만 가능합니다.")
         weights = model_cfg["weights_path"]
-        class_map = model_cfg["pretrained_class_map"]
+        class_map = {model_cfg["ball_class"]: 0}
+        val_images, val_labels = VAL_IMAGES_BALL, VAL_LABELS_BALL
     else:
-        weights = finetuned_weights_path(args.model)
-        if not Path(weights).exists():
-            raise FileNotFoundError(f"파인튜닝된 가중치가 없습니다: {weights}")
-        class_map = None
+        if args.stage == "baseline":
+            weights = model_cfg["weights_path"]
+            class_map = model_cfg["pretrained_class_map"]
+        else:
+            weights = finetuned_weights_path(args.model)
+            if not Path(weights).exists():
+                raise FileNotFoundError(f"파인튜닝된 가중치가 없습니다: {weights}")
+            class_map = None
+
+        val_images, val_labels = VAL_IMAGES, VAL_LABELS
 
     model = YOLO(str(weights))
-    images = sorted(Path(VAL_IMAGES).glob("*.jpg"))
+    images = sorted(Path(val_images).glob("*.jpg"))
     if args.limit:
         images = images[:args.limit]
 
-    print(f"[{args.model} / {args.stage}] 확인할 이미지: {len(images)}개 (weights={weights})")
+    print(f"[{args.model} / {args.target} / {args.stage}] 확인할 이미지: {len(images)}개 (weights={weights})")
 
     for img_path in images:
-        label_path = Path(VAL_LABELS) / f"{img_path.stem}.txt"
+        label_path = Path(val_labels) / f"{img_path.stem}.txt"
         draw_frame(img_path, label_path, model, class_map, args.conf, args.iou, args.out)
 
     print(f"\n전체 저장 완료 -> {args.out}")
