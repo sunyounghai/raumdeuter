@@ -2,29 +2,22 @@ import argparse
 from pathlib import Path
 
 from src.detection.config import EvalConfig
-from src.detection.model_registry import get_model_config
+from src.detection.model_registry import get_model_config, MODELS
 from src.detection.eval_common import compute_map, compute_fixed_threshold_metrics, write_metrics_file
-from src.common.paths import RESULTS_DIR, RAW_DATA_DIR
+from src.detection.paths import VAL_IMAGES_BALL, VAL_LABELS_BALL
+from src.common.paths import RESULTS_DIR
 
-BALL_SOURCE_CLASS = {
-    "h250": 0,
-    "roboflow": 0,
-    "coco": 32,
-}
-
-VAL_IMAGES_BALL = RAW_DATA_DIR / "SoccerNet/tracking-2023/test/SNMOT-116/img1"
-VAL_LABELS_BALL = RAW_DATA_DIR / "yolo_dataset_ball/val/labels"
 
 def evaluate_ball_baseline(model_name: str, cfg: EvalConfig) -> dict:
-    if model_name not in BALL_SOURCE_CLASS:
+    model_cfg = get_model_config(model_name)
+    if "ball_class" not in model_cfg:
         raise ValueError(
             f"{model_name}의 ball 클래스 인덱스가 정의되어 있지 않습니다. "
-            f"BALL_SOURCE_CLASS에 추가하세요"
+            f"model_registry.py의 MODELS[\"{model_name}\"]에 'ball_class'를 추가하세요"
         )
 
-    model_cfg = get_model_config(model_name)
     weights = model_cfg["weights_path"]
-    ball_idx = BALL_SOURCE_CLASS[model_name]
+    ball_idx = model_cfg["ball_class"]
     ball_class_map = {ball_idx: 0}
 
     print(f"{model_name} / baseline / ball 평가 중 "
@@ -39,8 +32,8 @@ def evaluate_ball_baseline(model_name: str, cfg: EvalConfig) -> dict:
         conf_thres=cfg.conf_thres, iou_thres=cfg.iou_thres,
     )
 
-    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     result_path = RESULTS_DIR / "detection" / f"{model_name}_baseline_ball_metrics.txt"
+    result_path.parent.mkdir(parents=True, exist_ok=True)
     write_metrics_file(
         result_path,
         header=f"[{model_name} / baseline / ball]",
@@ -57,7 +50,7 @@ def evaluate_ball_baseline(model_name: str, cfg: EvalConfig) -> dict:
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", required=True, choices=list(BALL_SOURCE_CLASS.keys()))
+    parser.add_argument("--model", required=True, choices=list(MODELS.keys()))
     parser.add_argument("--conf", type=float, default=0.25)
     parser.add_argument("--iou", type=float, default=0.5)
     args = parser.parse_args()

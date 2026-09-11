@@ -7,3 +7,5 @@ VAL_LABELS = DATASET_DIR / "val" / "labels"
 TRAIN_IMAGES = DATASET_DIR / "train" / "images"
 TRAIN_LABELS = DATASET_DIR / "train" / "labels"
 
+VAL_IMAGES_BALL = RAW_DATA_DIR / "SoccerNet/tracking-2023/test/SNMOT-116/img1"
+VAL_LABELS_BALL = RAW_DATA_DIR / "yolo_dataset_ball/val/labels"

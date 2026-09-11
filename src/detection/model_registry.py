@@ -16,18 +16,21 @@ MODELS = {
         "weights_path": str(WEIGHTS_DIR / "yolov8n.pt"),
         "run_name": "finetune",
         "pretrained_class_map": {0: 0}, # COCO person -> player
+        "ball_class": 32,
     },
     "roboflow": {
         # Roboflow (클래스: ball, goalkeepr, player, referee)
         "weights_path": str(WEIGHTS_DIR / "football-player-detection.pt"),
         "run_name": "roboflow_finetune",
         "pretrained_class_map": {1: 0, 2: 0}, # goalkeeper, player -> player
+        "ball_class": 0, 
     },
     "h250": {
         # SoccerNet H250 서브셋으로 사전학습 (클래스: ball, person)
         "weights_path": str(WEIGHTS_DIR / "yolov8n_soccernetv3h250_pretrained.pt"),
         "run_name": "h250_finetune",
         "pretrained_class_map": {1: 0}, # person -> player
+        "ball_class": 0,
     },
 }
 
