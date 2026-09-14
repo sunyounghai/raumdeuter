@@ -32,6 +32,12 @@ MODELS = {
         "pretrained_class_map": {1: 0}, # person -> player
         "ball_class": 0,
     },
+    "yolo26": {
+        # Ultralytics YOLO26n, 표준 COCO 사전학습
+        "weights_path": str(WEIGHTS_DIR / "yolo26n.pt"),
+        "pretrained_class_map": {0: 0}, # COCO person -> player (coco와 동일 가정)
+        "ball_class": 32,  # 표준 COCO 'sports ball' 추정 - coco와 같은 가정, 재확인 필요
+    },
 }
 
 def get_model_config(name: str) -> dict:
