@@ -1,14 +1,15 @@
-# 실험 결과: COCO / Roboflow / H250 공 검출 베이스라인 비교
+# 실험 결과: COCO / Roboflow / H250 / YOLO26 공 검출 베이스라인 비교
 
 ## 실행 조건
 
-- **평가 대상**: coco / roboflow / h250 3개 모델의 baseline
+- **평가 대상**: coco / roboflow / h250 / yolo26 4개 모델의 baseline
 
 - **GT 규모**: SoccerNet-Tracking SNMOT-116 (1개 시퀀스, 750프레임 중 공이 등장하는 724프레임)
     - GT 소스: 자체 라벨링이 아니라 `gt.txt`(MOT 포맷)의 ball tracklet(트랙 ID)을 `gt_to_ball_detection_labels.py`로 YOLO 포맷 변환
 
-- **클래스 매핑**: baseline 3개 모델 각자의 원래 클래스 체계에서 ball 인덱스만 추출
-(`BALL_SOURCE_CLASS`: h250=0, roboflow=0, coco=32(표준 COCO 'sports ball'))
+- **클래스 매핑**: baseline 4개 모델 각자의 원래 클래스 체계에서 ball 인덱스만 추출
+    (`model_registry.py`의 `MODELS[name]["ball_class"]` 필드: h250=0, roboflow=0, coco=32,
+    yolo26=32(coco와 동일하게 표준 COCO 'sports ball' 가정, 둘 다 재확인 필요))
 - **재현**: 단일 실행 (seed 고정 없이 1회)
 
 ## 결과
@@ -18,6 +19,7 @@
 | h250_baseline | 0.0757 | 0.0283 | 0.0136 | 0.4539 | 0.0953 | 0.1575 | 152/724 |
 | coco_baseline | 0.0468 | 0.0200 | 0.0135 | 0.4375 | 0.0580 | 0.1024 | 96/724 |
 | roboflow_baseline | 0.0383 | 0.0110 | - | 0.3037 | 0.0566 | 0.0955 | -/724 |
+| yolo26_baseline | 0.0496 | 0.0163 | 0.0034 | 0.4094 | 0.0718 | 0.1222 | 127/724 |
 
 **h250, iou 기준 추가 비교**
 
@@ -34,6 +36,16 @@
 **1. baseline 결과: h250 > coco > roboflow**
 - 선수 검출 실험에서의 결과와 동일
 - roboflow의 학습 도메인(DFL Bundesliga 방송영상)이 평가 도메인(SoccerNet, EPL)과 다른 데서 오는 차이일 가능성이 있음
+
+**1-1. YOLO26n(STAL 포함) 추가 비교: 아키텍처 개선 효과는 도메인 격차보다 작음**
+- 단순 비교(yolo26 vs h250)로는 yolo26이 전반적으로 열세(mAP50-95 0.0163 vs 0.0283,
+  Recall 0.0718 vs 0.0953) - 그러나 이는 도메인(축구 학습 여부)과 아키텍처(STAL 유무)가
+  같이 섞인 비교라 원인을 가릴 수 없음
+- 도메인을 통제한 비교(coco vs yolo26, 둘 다 일반 COCO 사전학습, 축구 도메인 학습 없음):
+Pred_count 96->127(+32%), Recall 0.0580->0.0718(+24%)로 뚜렷한 개선 - "소형 객체 검출 시도 증가" 효과와 일치하는 방향
+- 다만 mAP50-95는 0.0200->0.0163으로 오히려 하락, Precision도 0.4375->0.4094로
+  소폭 하락 - 검출 시도는 늘었지만 박스 위치 정밀도는 트레이드오프로 낮아진 것으로
+  추정(직접 검증 필요)
 
 **2. 스팟체크(h250 baseline, iou=0.3): 주로 FN이 대부분**
 - TP(성공)는 주로 공이 잔디 위에 정지된 상황에서 나타남
