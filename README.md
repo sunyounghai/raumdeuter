@@ -20,15 +20,11 @@ Vision AI(객체 검출, 트래킹, 호모그래피)를 활용해 일반 방송 
 - [x] 트래킹 (검출기x트래커 12개 조합 비교 완료, h250_baseline + BoT-SORT 최종 채택 → [결과](./docs/tracking/experiment_results.md))
 - [x] 호모그래피 (PnLCalib 기반 wrapper 구현, 391프레임 정량 검증 완료 → [결과](./docs/calibration/spotcheck_results.md))
 - [ ] 지표 계산 (진행 중 — 이동 속도 지표로 파이프라인 종합 검증 완료, 트랙 오매칭 문제 발견 → [결과](./docs/metrics/experiment_results.md))
+- [ ] 공 검출 (baseline 4개 모델 비교 완료 → [결과](./docs/detection/ball_experiment_results.md))
 
-## 현재 작업: 트래킹 파이프라인 확정, 다음 단계(지표 계산) 준비
-파이프라인(h250_baseline + BoT-SORT + calibration)을 이어붙여 첫 지표(이동 속도)를 계산한 결과, 
-매 프레임 간격으로 계산 시 calibration의 프레임별 계산 오차가 속도로 크게
-증폭되는 문제를 발견했습니다. GT(트래킹 정답) 데이터로 원인을 검증한 결과, 계산 간격을
-조정하는 것으로 문제의 83%가 해결됨을 확인했습니다(비현실적 속도 비율 25.0%→4.2%).
-
-다만 같은 방법을 자체 영상에 적용하면 개선 폭이 훨씬 작았습니다(82~90%→77~79%) — 이는
-calibration이 아니라 트래킹 단계의 오매칭이 주된 원인으로 보이며 다음 단계로 이 트랙 오매칭 문제를 진단하고 해결할 계획입니다. 
+## 현재 작업: SoccerNet 5개 시퀀스로 트래킹 단편화 정도 확인
+actionClass로 계층화한 SoccerNet 5개 시퀀스(Corner/Penalty/Direct free-kick/
+Clearance/Kick-off)에 최종 채택 조합(h250_baseline+BoT-SORT)을 적용해 트랙 단편화 정도를 확인했습니다. 예측 트랙 수가 GT 대비 1.5~2.8배로 나타났으며, 혼잡한 상황(Corner/Penalty/Direct free-kick)이 분산된 상황(Clearance/Kick-off) 보다 다소 높았으나 격차는 크지 않았습니다.
 
 ## 한계
 - 검출 모델은 단일 경기 영상으로 학습됨. 다른 방송사/경기장/카메라 셋업에 대한 일반화 성능은 검증되지 않음 (향후 과제).
@@ -61,6 +57,7 @@ raumdeuter/
 │   ├── detection/
 │   │   └── experiment_results.md      # 3개 모델 baseline/finetuned 평가 결과
 │   │   └── labeling_guideline.md
+│   │   └── ball_experiment_results.md # 공 검출 baseline 4개 모델 비교
 │   ├── tracking/
 │   │   └── experiment_results.md      # 검출기x트래커 12개 조합 비교
 │   ├── metrics/
